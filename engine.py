@@ -13,12 +13,10 @@ class _Stats:
     start_time: float | None
     end_time: float | None
     def __init__(self):
-        logging.debug("Initializing _Stats")
         self.total_chars = 0
         self.correct_chars = 0
         self.start_time: Optional[float] = None
         self.end_time: Optional[float] = None
-        logging.debug(f"Stats initialized: {self.correct_chars}, {self.total_chars}, {self.start_time}, {self.end_time}")
 
 # Stats for end-user
 @dataclass
@@ -28,7 +26,6 @@ class Stats:
     speed: Optional[float] = None
 
     def __init__(self, _int_st: _Stats | None = None):
-        logging.debug("Initializing Stats from _Stats")
         if _int_st is None:
             _int_st = _Stats()
         self.correct_chars = _int_st.correct_chars
@@ -36,7 +33,6 @@ class Stats:
         self.elapsed = None
         self.accuracy = None
         self.speed = None
-        logging.debug(f"Stats initialized: {self.correct_chars}, {self.total_chars}, {self.elapsed}, {self.accuracy}, {self.speed}")
 
 # Main engine implementation
 class TypingEngine:
@@ -50,15 +46,11 @@ class TypingEngine:
 
     # Helpers
     def _is_correct_key(self, key: str | None) -> bool:
-        print_key = key if key is not None else "None"
-        logging.debug(f"Checking if key is correct: {print_key}")
         if key is None or self._current_pos >= len(self._string):
-            logging.debug("Skipping unknown/unwanted key")
             return False
         return key == self._string[self._current_pos]
 
     def _increment(self, is_correct: bool) -> None: # advance to next char
-        logging.debug(f"Incrementing position. Is correct: {is_correct}")
         if is_correct:
             self._current_pos += 1
             self._stats.correct_chars += 1
@@ -88,7 +80,6 @@ class TypingEngine:
         return string
 
     def set_timeout(self, timeout: float) -> float:
-        logging.debug(f"Setting timeout: {timeout}")
         self._timeout = timeout
         return timeout
     
@@ -97,11 +88,9 @@ class TypingEngine:
         completed: str = self._string[:self._current_pos]
         current: str = self._string[self._current_pos] if self._current_pos < len(self._string) else ""
         remaining: str = self._string[self._current_pos+1:] if self._current_pos < len(self._string) else ""
-        logging.debug(f"String snapshot: '{completed}', '{current}', '{remaining}'")
         return (completed,current,remaining)
 
     def get_stop_time(self) -> float | None:
-        logging.debug("Getting stop time")
         if self._stats.end_time:
             return self._stats.end_time
         # Mark end_time early to avoid recalculation
@@ -110,7 +99,6 @@ class TypingEngine:
         return self._stats.end_time
 
     def get_stats(self, real_time: bool = False, timestamp: float | None = None) -> Stats | None:
-        logging.debug(f"Getting stats. Real time: {real_time}, timestamp: {timestamp}")
         if not self._running or real_time:
             res = self._stats
             ret = Stats(self._stats) #end-user stats
@@ -124,7 +112,6 @@ class TypingEngine:
                 ret.speed /= ret.elapsed
             else:
                 ret.speed = 0.0
-                logging.debug(f"Stats computed: Elapsed: {ret.elapsed}, Accuracy: {ret.accuracy}, Speed: {ret.speed}")
             return ret
         return None
 
@@ -160,7 +147,6 @@ class TypingEngine:
             return self._stats.end_time
 
     def process_key(self, key: str | None, pressed_time: float) -> bool:
-        # logging.debug(f"Processing key: {key}, pressed_time: {pressed_time}")
         is_correct = self._is_correct_key(key)
         stop_time = pressed_time
 
@@ -176,5 +162,4 @@ class TypingEngine:
                 if self._current_pos >= len(self._string):
                     self.stop(stop_time)
 
-        # logging.debug(f"Key processed: {key}, is_correct: {is_correct}")
         return is_correct
