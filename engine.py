@@ -84,11 +84,17 @@ class TypingEngine:
         return timeout
     
     # Getters
-    def get_string_snapshot(self) -> Tuple[str,str,str]:
-        completed: str = self._string[:self._current_pos]
-        current: str = self._string[self._current_pos] if self._current_pos < len(self._string) else ""
-        remaining: str = self._string[self._current_pos+1:] if self._current_pos < len(self._string) else ""
-        return (completed,current,remaining)
+    def get_string_snapshot(self, max_size: int) -> Tuple[str, str, str]:
+        half_size = max_size // 2
+
+        start_index = max(0, self._current_pos - half_size)
+        end_index = min(len(self._string), self._current_pos + half_size + 1)
+
+        completed = self._string[start_index:self._current_pos].rjust(half_size)
+        current = self._string[self._current_pos] if self._current_pos < len(self._string) else ""
+        remaining = self._string[self._current_pos + 1:end_index]
+
+        return (completed, current, remaining)
 
     def get_stop_time(self) -> float | None:
         if self._stats.end_time:
@@ -149,6 +155,8 @@ class TypingEngine:
     def process_key(self, key: str | None, pressed_time: float) -> bool:
         is_correct = self._is_correct_key(key)
         stop_time = pressed_time
+
+        logging.debug(f"Processing key: {key}, Correct: {is_correct}, Time: {pressed_time}")
 
         if not self._running and self._current_pos == 0 and is_correct:
             self.start(pressed_time)
