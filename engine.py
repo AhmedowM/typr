@@ -43,11 +43,12 @@ class TypingEngine:
     _stats: _Stats
     _timeout: float | None
     _stop_when_timeout: bool
+    _is_current_char_correct: bool = True
 
     # Helpers
-    def _is_correct_key(self, key: str | None) -> bool:
+    def _is_correct_key(self, key: str | None) -> bool | None:
         if key is None or self._current_pos >= len(self._string):
-            return False
+            return None
         return key == self._string[self._current_pos]
 
     def _increment(self, is_correct: bool) -> None: # advance to next char
@@ -137,7 +138,10 @@ class TypingEngine:
     def is_finished(self):
         return self._current_pos > 0 and not self._running
 
-    # Manipulators        
+    def is_correct(self):
+        return self._is_current_char_correct
+
+    # Manipulators
     def start(self, *args) -> float | None:
         logging.debug("Starting TypingEngine")
         if not self._running: # Don't touch if already running
@@ -152,8 +156,9 @@ class TypingEngine:
             self._running = False
             return self._stats.end_time
 
-    def process_key(self, key: str | None, pressed_time: float) -> bool:
+    def process_key(self, key: str | None, pressed_time: float) -> bool | None:
         is_correct = self._is_correct_key(key)
+        self._is_current_char_correct = is_correct if is_correct is not None else False
         stop_time = pressed_time
 
         logging.debug(f"Processing key: {key}, Correct: {is_correct}, Time: {pressed_time}")
@@ -166,7 +171,7 @@ class TypingEngine:
                 stop_time = self.get_stop_time() or stop_time
                 self.stop(stop_time)
             else:
-                self._increment(is_correct)
+                if is_correct is not None: self._increment(is_correct)
                 if self._current_pos >= len(self._string):
                     self.stop(stop_time)
 
