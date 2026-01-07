@@ -37,7 +37,7 @@ class TestApp(App):
         self.Engine = TypingEngine(self.Text, timeout)
 
     async def on_mount(self):
-        self.timer = self.set_interval(0.5, self.update_ui)
+        self.timer = self.set_interval(0.1, self.update_ui)
 
     def compose(self):
         # initial = self.Engine.get_string_snapshot(max_size=20)
@@ -55,9 +55,11 @@ class TestApp(App):
         correct = self.Engine.process_key(key_to_process,timestamp)
         self.update_ui(correct, timestamp)
 
-    def update_ui(self, correct: bool = True, timestamp: float | None = None):
+    def update_ui(self, correct: bool | None = None, timestamp: float | None = None):
         if timestamp is None:
             timestamp = time.perf_counter_ns()
+        if correct is None:
+            correct = self.Engine.is_correct()
         stats = self.Engine.get_stats(real_time=True, timestamp=timestamp)
         label1 = self.query_one("#label",Label)
         label2 = self.query_one("#stats",Label)        
@@ -68,7 +70,7 @@ class TestApp(App):
             # format += f'Timestamp: {timestamp}\nEvent time: {event.time*1e9}'
             format = f'Correct: {stats.correct_chars}   Total: {stats.total_chars}'
             format += f'\nAccuracy: {(stats.accuracy or 0)*100:.0f}%'
-            format += f'\nElapsed: {(max(stats.elapsed or 0,0)):.2f}s'
+            format += f'\nElapsed: {(max(stats.elapsed or 0,0)):.1f}s'
             format += f'\nSpeed: {(stats.speed or 0):.2f}CPM'
             label2.content = format
         # string = f'{event.character} - {event.key} - {event.name}'
