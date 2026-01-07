@@ -1,0 +1,1 @@
+This is sample text. It will be hardcoded to the source code. It will be used when TypingEngine is not provided a proper string.
