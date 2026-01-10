@@ -5,10 +5,13 @@ from textual.containers import Container, Horizontal
 from engine import TypingEngine
 from rich.text import Text
 import time
+import logging
 
 class TypingApp(App):
     FILENAME = "tests.txt"
     CSS_PATH = "style.tcss"
+
+    logger: logging.Logger
 
     def _format_string_snapshot(self, correct: bool, max_size: int = 20) -> Text:
         completed, current, remaining = self.Engine.get_string_snapshot(max_size)
@@ -22,10 +25,11 @@ class TypingApp(App):
             text.append(remaining)
         return text
 
-    def __init__(self, filename: str | None = None, timeout: int = 30):
+    def __init__(self, filename: str | None = None, timeout: int = 30, log_level: int = logging.INFO, log_file: str = 'typing_engine.log'):
         super().__init__()
         self.filename = filename or self.FILENAME
-        self.Engine = TypingEngine()
+        self.Engine = TypingEngine(log_level=log_level, log_file=log_file)
+        self.logger = logging.getLogger("engine")
         self.Engine.set_string(self.filename)
         self.Engine.set_timeout(timeout)
 
@@ -58,8 +62,7 @@ class TypingApp(App):
             key_to_process = "\n"
         if not event.is_printable:
             return
-        timestamp = event.time*1e9
-        correct = self.Engine.process_key(key_to_process,timestamp)
+        correct, timestamp = self.Engine.process_key(key_to_process)
         self.update_ui(correct, timestamp)
 
     def update_ui(self, correct: bool | None = None, timestamp: float | None = None):
@@ -67,6 +70,7 @@ class TypingApp(App):
             timestamp = time.perf_counter_ns()
         if correct is None:
             correct = self.Engine.is_correct()
+        self.Engine.tick(timestamp)
         stats = self.Engine.get_stats(real_time=True, timestamp=timestamp)
         label1 = self.query_one("#label",Label)
         label1.content = self._format_string_snapshot(correct, label1.size.width-6)
