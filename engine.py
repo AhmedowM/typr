@@ -117,7 +117,7 @@ class TypingEngine:
 
         completed = self._string[start_index:self._current_pos].rjust(half_size)
         current = self._string[self._current_pos] if self._current_pos < len(self._string) else " "
-        remaining = self._string[self._current_pos + 1:end_index]
+        remaining = self._string[self._current_pos + 1:end_index].ljust(half_size-1)
 
         return (completed, current, remaining)
 
