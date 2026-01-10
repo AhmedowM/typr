@@ -6,7 +6,7 @@ from engine import TypingEngine
 from rich.text import Text
 import time
 
-class TestApp(App):
+class TypingApp(App):
     FILENAME = "tests.txt"
     CSS_PATH = "style.tcss"
 
@@ -93,6 +93,3 @@ class TestApp(App):
             accuracy_label.border_subtitle = f'Accuracy'
             speed_label.border_subtitle = f'Speed'
             raw_speed_label.border_subtitle = f'Raw Speed'
-
-app = TestApp()
-app.run()
