@@ -1,0 +1,66 @@
+Screen {
+    background: darkblue;
+    layout: vertical;
+    content-align: center middle;
+}
+
+#main_container {
+    background: rgba(0, 140, 255, 0.4);
+    height: 100%;
+    margin: 1 1 1 1;
+    box-sizing: border-box;
+    layout: vertical;
+    content-align: center bottom;
+    align: center middle;
+}
+
+#l_spacer1, #l_spacer2 {
+    width: 2fr;
+    max-width: 20%;
+}
+
+#label {
+    background: darkgray;
+    color: black;
+    height: 3;
+    width: 15fr;
+    max-width: 90%;
+    margin: 1 1 1 1;
+    content-align: center middle;
+    align: center bottom;
+    border: vkey black;
+}
+
+#stats_container {
+    background: darkgray;
+    color: black;
+    height: 5;
+    width: 100%;
+    margin: 1 1 1 1;
+    content-align: center middle;
+    align: center bottom;
+}
+
+#elapsed, #accuracy, #speed, #raw_speed {
+    width: 5fr;
+    max-width: 24%;
+    height: 100%;
+    content-align: center middle;
+    align: center middle;
+    border: tall black;
+    background: blue;
+    margin: 1 1 1 1;
+    color: white;
+}
+
+#spacer1 {
+    min-height: 1;
+    max-height: 40%;
+    height: 1fr;
+}
+
+#spacer2 {
+    min-height: 1;
+    max-height: 60%;
+    height: 2fr;
+}
