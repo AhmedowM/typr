@@ -22,7 +22,7 @@ class TestApp(App):
             text.append(remaining)
         return text
 
-    def __init__(self, filename: str | None = None, timeout: int = 50):
+    def __init__(self, filename: str | None = None, timeout: int = 30):
         super().__init__()
         self.filename = filename or self.FILENAME
         self.Engine = TypingEngine()
