@@ -2,8 +2,7 @@ import time
 import logging
 from typing import Tuple, Optional
 from dataclasses import dataclass
-
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s', filename='typing_engine.log')
+from enum import Enum, auto
 
 # Internal stats
 @dataclass
@@ -19,7 +18,6 @@ class _Stats:
         self.end_time: Optional[float] = None
 
 # Stats for end-user
-@dataclass
 class Stats:
     elapsed: Optional[float] = None
     accuracy: Optional[float] = None
@@ -36,6 +34,12 @@ class Stats:
         self.speed = None
         self.raw_speed = None
 
+class State(Enum):
+    IDLE = auto(),
+    STOPPED = auto(),
+    TIMEOUT = auto(),
+    COMPLETED = auto()
+
 # Main engine implementation
 class TypingEngine:
     # Internals
@@ -43,11 +47,17 @@ class TypingEngine:
     _current_pos: int
     _running: bool
     _stats: _Stats
+
     _timeout: float | None
     _stop_when_timeout: bool
+    _state: State
+    
     _is_current_char_correct: bool = True
+    
     _default_file: str
     _default_string: str = "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+    
+    _logger: logging.Logger
 
     # Helpers
     def _is_correct_key(self, key: str | None) -> bool | None:
@@ -67,17 +77,25 @@ class TypingEngine:
             with open(filename, "r", encoding="utf-8") as file:
                 return file.read(), 0
         except FileNotFoundError:
-            logging.error(f"File not found: {filename}")
-            logging.error(f"Using default file instead: '{self._default_file}'") if not filename == self._default_file else logging.error("Using default text instead.")
+            self._logger.error(f"File not found: {filename}")
+            self._logger.error(f"Using default file instead: '{self._default_file}'") if not filename == self._default_file else self._logger.error("Using default text instead.")
             return "Error: File not found.", 1
         except Exception as e:
-            logging.error(f"Error reading file {filename}: {e}")
-            logging.error(f"Using default file instead: '{self._default_file}'") if not filename == self._default_file else logging.error("Using default text instead.")
+            self._logger.error(f"Error reading file {filename}: {e}")
+            self._logger.error(f"Using default file instead: '{self._default_file}'") if not filename == self._default_file else self._logger.error("Using default text instead.")
             return f"Error: {e}", 2
 
     # Constructor
-    def __init__(self, string: str = "", timeout: float | None = None, default_file: str = "sample.txt"):
-        logging.debug(f"Initializing TypingEngine with string of length {len(string)} and timeout {timeout}")
+    def __init__(self, string: str = "", timeout: float | None = None, default_file: str = "sample.txt", log_level: int = logging.INFO, log_file: str = "typing_engine.log"):
+        self._logger = logging.getLogger(__name__)
+        self._logger.setLevel(log_level)
+        for handler in self._logger.handlers[:]:
+            self._logger.removeHandler(handler)
+        file_handler = logging.FileHandler(log_file)
+        formatter = logging.Formatter('%(name)s - %(asctime)s - %(levelname)s - %(message)s')
+        file_handler.setFormatter(formatter)
+        self._logger.addHandler(file_handler)
+        self._logger.info(f"Initializing TypingEngine with string of length {len(string)} and timeout {timeout}")
         self._string = string
         self._timeout = timeout
         self._current_pos = 0
@@ -85,6 +103,7 @@ class TypingEngine:
         self._stats = _Stats()
         self._stop_when_timeout: bool = True
         self._default_file = default_file
+        self._state = State.IDLE
 
     # Setters
     def set_string(self, filename: str) -> str: # To reuse the engine
@@ -93,13 +112,12 @@ class TypingEngine:
             string, ec = self._read_text_file(self._default_file)
         if ec != 0:
             string = self._default_string
-        logging.debug(f"Setting new string of length {len(string)}")
+        self._logger.debug(f"Setting new string of length {len(string)}")
         self.set_next_string(string)
         self._stats = _Stats()
         return string
 
     def set_next_string(self, string: str) -> str: # For later implementation of continuous larger input
-        logging.debug(f"Setting next string of length {len(string)}")
         self._string = string
         self._current_pos = 0
         return string
@@ -109,6 +127,9 @@ class TypingEngine:
         return timeout
     
     # Getters
+    def get_state(self):
+        return self._state
+
     def get_string_snapshot(self, max_size: int) -> Tuple[str, str, str]:
         half_size = max_size // 2
 
@@ -130,11 +151,6 @@ class TypingEngine:
         return self._stats.end_time
 
     def get_stats(self, real_time: bool = False, timestamp: float | None = None) -> Stats | None:
-        pressed_time = timestamp or time.perf_counter_ns()
-        stop_time = pressed_time
-        if self._running and self._stop_when_timeout and self.is_timeout(pressed_time):
-            stop_time = self.get_stop_time() or stop_time
-            self.stop(stop_time)
         if not self._running or real_time:
             res = self._stats
             ret = Stats(self._stats) #end-user stats
@@ -166,46 +182,52 @@ class TypingEngine:
             else: return False
         else: # Happens when engine is not started yet, E.g first key press is incorrect
             return False
-        
+
     def is_finished(self):
-        return self._current_pos > 0 and not self._running
+        return self._state in (
+            State.TIMEOUT,
+            State.STOPPED,
+            State.COMPLETED
+        )
 
     def is_correct(self):
         return self._is_current_char_correct
 
     # Manipulators
     def start(self, *args) -> float | None:
-        logging.debug("Starting TypingEngine")
+        self._logger.info("Starting TypingEngine")
         if not self._running: # Don't touch if already running
             self._stats.start_time = args[0] or time.perf_counter_ns()
             self._running = True
             return self._stats.start_time
 
-    def stop(self, *args) -> float | None:
+    def stop(self, end_time: float | None, state: State = State.STOPPED) -> float | None:
         if self._running: # Don't touch if already stopped
-            logging.debug("Stopping TypingEngine")
-            self._stats.end_time = args[0] or time.perf_counter_ns()
+            self._logger.info("Stopping TypingEngine")
+            self._stats.end_time = end_time or time.perf_counter_ns()
             self._running = False
-            logging.info(f"Typing session ended. Total chars: {self._stats.total_chars}, Correct chars: {self._stats.correct_chars}")
+            self._state = state
+            self._logger.info(f"Typing session ended. Total chars: {self._stats.total_chars}, Correct chars: {self._stats.correct_chars}, Reason: {self._state.name}")
             return self._stats.end_time
 
-    def process_key(self, key: str | None, pressed_time: float) -> bool | None:
-        is_correct = self._is_correct_key(key)
-        self._is_current_char_correct = is_correct if is_correct is not None else False
-        stop_time = pressed_time
+    def tick(self, now: float) -> None:
+        if self._running and self._stop_when_timeout and self.is_timeout(now):
+            stop_time = self.get_stop_time() or now
+            self.stop(stop_time, State.TIMEOUT)
 
-        logging.debug(f"Processing key: {key}, Correct: {is_correct}, Time: {pressed_time}")
+    def process_key(self, key: str | None) -> Tuple[bool | None,float]:
+        is_correct = self._is_correct_key(key)
+        pressed_time = time.perf_counter_ns()
+        self._is_current_char_correct = is_correct if is_correct is not None else False
+
+        self._logger.debug(f"Processing key: {key}, Correct: {is_correct}, Time: {pressed_time}")
 
         if not self._running and self._current_pos == 0 and is_correct:
             self.start(pressed_time)
             self._increment(is_correct)
         elif self._running:
-            if self._stop_when_timeout and self.is_timeout(pressed_time):
-                stop_time = self.get_stop_time() or stop_time
-                self.stop(stop_time)
-            else:
-                if is_correct is not None: self._increment(is_correct)
-                if self._current_pos >= len(self._string):
-                    self.stop(stop_time)
+            if is_correct is not None: self._increment(is_correct)
+            if self._current_pos >= len(self._string):
+                self.stop(pressed_time, State.COMPLETED)
 
-        return is_correct
+        return (is_correct, pressed_time)
