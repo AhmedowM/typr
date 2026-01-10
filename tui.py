@@ -9,7 +9,6 @@ import time
 class TestApp(App):
     FILENAME = "tests.txt"
     CSS_PATH = "style.tcss"
-    TIMEOUT = 15
 
     def _format_string_snapshot(self, correct: bool, max_size: int = 20) -> Text:
         completed, current, remaining = self.Engine.get_string_snapshot(max_size)
@@ -28,7 +27,7 @@ class TestApp(App):
         self.filename = filename or self.FILENAME
         self.Engine = TypingEngine()
         self.Engine.set_string(self.filename)
-        self.Engine.set_timeout(self.TIMEOUT)
+        self.Engine.set_timeout(timeout)
 
     async def on_mount(self):
         self.timer = self.set_interval(0.1, self.update_ui)
