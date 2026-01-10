@@ -24,6 +24,7 @@ class Stats:
     elapsed: Optional[float] = None
     accuracy: Optional[float] = None
     speed: Optional[float] = None
+    raw_speed: Optional[float] = None
 
     def __init__(self, _int_st: _Stats | None = None):
         if _int_st is None:
@@ -33,6 +34,7 @@ class Stats:
         self.elapsed = None
         self.accuracy = None
         self.speed = None
+        self.raw_speed = None
 
 # Main engine implementation
 class TypingEngine:
@@ -44,6 +46,8 @@ class TypingEngine:
     _timeout: float | None
     _stop_when_timeout: bool
     _is_current_char_correct: bool = True
+    _default_file: str
+    _default_string: str = "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
 
     # Helpers
     def _is_correct_key(self, key: str | None) -> bool | None:
@@ -57,8 +61,22 @@ class TypingEngine:
             self._stats.correct_chars += 1
         self._stats.total_chars += 1
 
+    def _read_text_file(self, filename: str) -> tuple[str, int]:
+        """Reads the main text from the given file."""
+        try:
+            with open(filename, "r", encoding="utf-8") as file:
+                return file.read(), 0
+        except FileNotFoundError:
+            logging.error(f"File not found: {filename}")
+            logging.error(f"Using default file instead: '{self._default_file}'") if not filename == self._default_file else logging.error("Using default text instead.")
+            return "Error: File not found.", 1
+        except Exception as e:
+            logging.error(f"Error reading file {filename}: {e}")
+            logging.error(f"Using default file instead: '{self._default_file}'") if not filename == self._default_file else logging.error("Using default text instead.")
+            return f"Error: {e}", 2
+
     # Constructor
-    def __init__(self, string: str = "", timeout: float | None = None):
+    def __init__(self, string: str = "", timeout: float | None = None, default_file: str = "sample.txt"):
         logging.debug(f"Initializing TypingEngine with string of length {len(string)} and timeout {timeout}")
         self._string = string
         self._timeout = timeout
@@ -66,9 +84,15 @@ class TypingEngine:
         self._running = False
         self._stats = _Stats()
         self._stop_when_timeout: bool = True
+        self._default_file = default_file
 
     # Setters
-    def set_string(self, string: str) -> str: # To reuse the engine
+    def set_string(self, filename: str) -> str: # To reuse the engine
+        string, ec = self._read_text_file(filename)
+        if ec != 0:
+            string, ec = self._read_text_file(self._default_file)
+        if ec != 0:
+            string = self._default_string
         logging.debug(f"Setting new string of length {len(string)}")
         self.set_next_string(string)
         self._stats = _Stats()
@@ -92,7 +116,7 @@ class TypingEngine:
         end_index = min(len(self._string), self._current_pos + half_size + 1)
 
         completed = self._string[start_index:self._current_pos].rjust(half_size)
-        current = self._string[self._current_pos] if self._current_pos < len(self._string) else ""
+        current = self._string[self._current_pos] if self._current_pos < len(self._string) else " "
         remaining = self._string[self._current_pos + 1:end_index]
 
         return (completed, current, remaining)
@@ -106,6 +130,11 @@ class TypingEngine:
         return self._stats.end_time
 
     def get_stats(self, real_time: bool = False, timestamp: float | None = None) -> Stats | None:
+        pressed_time = timestamp or time.perf_counter_ns()
+        stop_time = pressed_time
+        if self._running and self._stop_when_timeout and self.is_timeout(pressed_time):
+            stop_time = self.get_stop_time() or stop_time
+            self.stop(stop_time)
         if not self._running or real_time:
             res = self._stats
             ret = Stats(self._stats) #end-user stats
@@ -115,10 +144,13 @@ class TypingEngine:
                 ret.elapsed = ((res.end_time or 0.0) - (res.start_time or 0.0)) / 1e9
             ret.accuracy = (ret.correct_chars or 0) / (ret.total_chars or 1)
             ret.speed = 60 * (ret.correct_chars or 0)
+            ret.raw_speed = 60 * (ret.total_chars or 0)
             if ret.elapsed and ret.elapsed > 0:
                 ret.speed /= ret.elapsed
+                ret.raw_speed /= ret.elapsed
             else:
                 ret.speed = 0.0
+                ret.raw_speed = 0.0
             return ret
         return None
 
@@ -150,10 +182,11 @@ class TypingEngine:
             return self._stats.start_time
 
     def stop(self, *args) -> float | None:
-        logging.debug("Stopping TypingEngine")
         if self._running: # Don't touch if already stopped
+            logging.debug("Stopping TypingEngine")
             self._stats.end_time = args[0] or time.perf_counter_ns()
             self._running = False
+            logging.info(f"Typing session ended. Total chars: {self._stats.total_chars}, Correct chars: {self._stats.correct_chars}")
             return self._stats.end_time
 
     def process_key(self, key: str | None, pressed_time: float) -> bool | None:
