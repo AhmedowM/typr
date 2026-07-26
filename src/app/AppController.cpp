@@ -5,6 +5,7 @@
 #include "ui/screens/ResultsScreen.hpp"
 #include "ui/screens/HistoryScreen.hpp"
 #include "ui/screens/StatsScreen.hpp"
+#include "ui/screens/InfoScreen.hpp"
 #include <ftxui/component/component.hpp>
 #include <ftxui/component/event.hpp>
 #include <ftxui/dom/elements.hpp>
@@ -49,6 +50,7 @@ AppController::AppController(ftxui::ScreenInteractive& screen, Storage& storage)
     };
     mainCB.onHistory = [this] { navigateTo(ScreenType::History); };
     mainCB.onStats = [this] { navigateTo(ScreenType::Stats); };
+    mainCB.onInfo = [this] { navigateTo(ScreenType::Info); };
     mainCB.onQuit = [this] { m_screen.Exit(); };
 
     m_mainScreen = MainScreen(mainCB);
@@ -81,6 +83,12 @@ AppController::AppController(ftxui::ScreenInteractive& screen, Storage& storage)
         m_statsScreen = StatsScreen(*m_storage, statsCB);
     }
 
+    {
+        InfoScreenCallbacks infoCB;
+        infoCB.onMain = [this] { navigateTo(ScreenType::Main); };
+        m_infoScreen = InfoScreen(infoCB);
+    }
+
     // Tab container for screen switching
     m_root = Container::Tab({
         m_mainScreen,
@@ -88,6 +96,7 @@ AppController::AppController(ftxui::ScreenInteractive& screen, Storage& storage)
         m_resultsScreen,
         m_historyScreen,
         m_statsScreen,
+        m_infoScreen,
     }, &m_activeTab);
 
     // Start tick thread

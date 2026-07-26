@@ -21,7 +21,7 @@ execute_process(
     ERROR_QUIET
 )
 if(NOT TYPR_VERSION)
-    set(TYPR_VERSION "v0.0.0")
+    set(TYPR_VERSION "v0.1.0")
 endif()
 message(STATUS "typr version: ${TYPR_VERSION}")
 
@@ -44,6 +44,7 @@ add_executable(typr
     src/ui/screens/ResultsScreen.cpp
     src/ui/screens/HistoryScreen.cpp
     src/ui/screens/StatsScreen.cpp
+    src/ui/screens/InfoScreen.cpp
     src/engine/EngineBridge.cpp
     src/engine/ContentSource.cpp
     src/storage/Storage.cpp

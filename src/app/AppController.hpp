@@ -19,7 +19,8 @@ enum class ScreenType {
     Typing,
     Results,
     History,
-    Stats
+    Stats,
+    Info
 };
 
 class AppController {
@@ -48,6 +49,7 @@ private:
     ftxui::Component m_resultsScreen;
     ftxui::Component m_historyScreen;
     ftxui::Component m_statsScreen;
+    ftxui::Component m_infoScreen;
 
     std::shared_ptr<ui::TypingScreenState> m_typingState;
 

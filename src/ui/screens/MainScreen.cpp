@@ -15,6 +15,7 @@ ftxui::Component MainScreen(const MainScreenCallbacks& callbacks) {
     auto onStart = callbacks.onStartPractice;
     auto onHistory = callbacks.onHistory;
     auto onStats = callbacks.onStats;
+    auto onInfo = callbacks.onInfo;
 
     auto flatButton = ButtonOption();
     flatButton.transform = [](const EntryState& s) {
@@ -38,9 +39,15 @@ ftxui::Component MainScreen(const MainScreenCallbacks& callbacks) {
     }, flatButton);
     statsButton |= size(WIDTH, EQUAL, 15);
 
+    auto infoButton = Button("  Info  ", [onInfo] {
+        if (onInfo) onInfo();
+    }, flatButton);
+    infoButton |= size(WIDTH, EQUAL, 15);
+
     auto buttonsRow = Container::Horizontal({
         historyButton,
         statsButton,
+        infoButton,
     });
 
     auto container = Container::Vertical({
@@ -62,13 +69,17 @@ ftxui::Component MainScreen(const MainScreenCallbacks& callbacks) {
 
         return vbox(Elements{
             body | flex,
-            footer({"Q: Quit", "↑↓: Navigate", "Enter: Select"}),
+            footer({"Q: Quit", "I: Info", "↑↓: Navigate", "Enter: Select"}),
         });
     }));
 
-    auto catchHandler = std::function<bool(Event)>([onQuit = callbacks.onQuit](Event event) {
+    auto catchHandler = std::function<bool(Event)>([onInfo, onQuit = callbacks.onQuit](Event event) {
         if (event == Event::Character('q') || event == Event::Escape) {
             if (onQuit) onQuit();
+            return true;
+        }
+        if (event == Event::Character('i')) {
+            if (onInfo) onInfo();
             return true;
         }
         return false;

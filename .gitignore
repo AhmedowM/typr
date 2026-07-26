@@ -12,3 +12,6 @@ build/
 *.a
 .DS_Store
 Thumbs.db
+visuals.py
+tui.md
+PLAN.md
