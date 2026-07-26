@@ -22,7 +22,6 @@ ftxui::Component MainScreen(const MainScreenCallbacks& callbacks) {
     startOpt.transform = [](const EntryState& s) {
         auto prefix = text(s.focused ? "> " : "  ");
         auto element = text(s.label) | center;
-        // if (s.focused) element |= inverted;
         if (s.focused) {
             prefix |= bgcolor(BG_CARD);
             element |= bgcolor(BG_CARD);

@@ -5,6 +5,7 @@
 #include <ftxui/component/component.hpp>
 #include <ftxui/component/event.hpp>
 #include <ftxui/dom/elements.hpp>
+#include <algorithm>
 #include <functional>
 #include <memory>
 #include <string>
@@ -22,8 +23,7 @@ ftxui::Component HistoryScreen(Storage& storage, HistoryScreenCallbacks callback
     };
     auto state = std::make_shared<HistoryState>();
 
-    auto reload = [&storage, state] {
-        state->sessions = storage.repo().getRecent(50);
+    auto clampSelected = [state] {
         if (state->selectedIndex >= static_cast<int>(state->sessions.size())) {
             state->selectedIndex = state->sessions.empty() ? -1 : static_cast<int>(state->sessions.size()) - 1;
         }
@@ -47,9 +47,16 @@ ftxui::Component HistoryScreen(Storage& storage, HistoryScreenCallbacks callback
         return s + std::string(static_cast<size_t>(w - s.size()), ' ');
     };
 
-    reload();
+    // Initial load
+    state->sessions = storage.repo().getRecent(50);
+    clampSelected();
 
-    auto renderer = Renderer(std::function<Element(bool)>([state, &fmtTime, &fmtDate, &pad](bool) {
+    auto renderer = Renderer(std::function<Element(bool)>([state, fmtTime = std::move(fmtTime), fmtDate = std::move(fmtDate), pad = std::move(pad), &storage](bool) {
+        state->sessions = storage.repo().getRecent(50);
+        if (state->selectedIndex >= static_cast<int>(state->sessions.size())) {
+            state->selectedIndex = state->sessions.empty() ? -1 : static_cast<int>(state->sessions.size()) - 1;
+        }
+
         if (state->sessions.empty()) {
             return vbox(Elements{
                 contain(vbox(Elements{
@@ -61,6 +68,16 @@ ftxui::Component HistoryScreen(Storage& storage, HistoryScreenCallbacks callback
             });
         }
 
+        const int VISIBLE = 20;
+        int n = static_cast<int>(state->sessions.size());
+        int sel = state->selectedIndex;
+
+        int start = std::max(0, sel - VISIBLE / 2);
+        int end = std::min(n, start + VISIBLE);
+        if (end - start < VISIBLE && start > 0) {
+            start = std::max(0, end - VISIBLE);
+        }
+
         Elements rows;
 
         auto header = text(pad("ID", 4) + "  " + pad("Date", 11) + "  " +
@@ -70,11 +87,11 @@ ftxui::Component HistoryScreen(Storage& storage, HistoryScreenCallbacks callback
         rows.push_back(header);
         rows.push_back(separator());
 
-        for (int i = 0; i < static_cast<int>(state->sessions.size()); ++i) {
+        for (int i = start; i < end; ++i) {
             const auto& s = state->sessions[i];
-            bool sel = (i == state->selectedIndex);
+            bool selRow = (i == sel);
 
-            std::string line = (sel ? ">" : " ") +
+            std::string line = (selRow ? ">" : " ") +
                 pad(std::to_string(s.id), 3) + "  " +
                 pad(fmtDate(s.timestamp), 11) + "  " +
                 pad(s.mode, 8) + "  " +
@@ -82,8 +99,13 @@ ftxui::Component HistoryScreen(Storage& storage, HistoryScreenCallbacks callback
                 pad(std::to_string(static_cast<int>(s.accuracy)) + "%", 5) + "  " +
                 fmtTime(s.durationMs);
 
-            auto elem = text(line) | (sel ? bgcolor(BG_CARD) : bgcolor(Color::Default));
+            auto elem = text(line) | (selRow ? bgcolor(BG_CARD) : bgcolor(Color::Default));
             rows.push_back(elem);
+        }
+
+        if (n > VISIBLE) {
+            rows.push_back(text("  " + std::to_string(start + 1) + "-" +
+                                std::to_string(end) + " of " + std::to_string(n) + "  ") | dim | center);
         }
 
         return vbox(Elements{
@@ -91,12 +113,14 @@ ftxui::Component HistoryScreen(Storage& storage, HistoryScreenCallbacks callback
                 BigText::render("history"),
                 separator(),
                 vbox(std::move(rows)) | borderRounded | flex,
-            }) | flex),
-            footer({"Up/Down: Navigate", "Delete: Remove", "Esc: Menu"}),
+            }) | size(HEIGHT, LESS_THAN, 28) | flex),
+            footer({"↑↓: Navigate", "Delete: Remove", "Esc: Menu"}),
         });
     }));
 
-    return renderer | CatchEvent(std::function<bool(Event)>([state, &reload, &storage, onMain = callbacks.onMain](Event event) {
+    auto onMain = callbacks.onMain;
+
+    return renderer | CatchEvent(std::function<bool(Event)>([state, &storage, onMain](Event event) {
         int n = static_cast<int>(state->sessions.size());
         if (n == 0) {
             if (event == Event::Escape || event == Event::CtrlG) {
@@ -128,7 +152,10 @@ ftxui::Component HistoryScreen(Storage& storage, HistoryScreenCallbacks callback
             if (state->selectedIndex >= 0 && state->selectedIndex < n) {
                 auto id = state->sessions[state->selectedIndex].id;
                 [[maybe_unused]] auto deleted = storage.repo().deleteSession(id);
-                reload();
+                state->sessions = storage.repo().getRecent(50);
+                if (state->selectedIndex >= static_cast<int>(state->sessions.size())) {
+                    state->selectedIndex = state->sessions.empty() ? -1 : static_cast<int>(state->sessions.size()) - 1;
+                }
             }
             return true;
         }
