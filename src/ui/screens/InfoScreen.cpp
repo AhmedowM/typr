@@ -49,7 +49,7 @@ ftxui::Component InfoScreen(InfoScreenCallbacks callbacks) {
         );
 
         return vbox(Elements{
-            text("About") | bold | center,
+            BigText::render("about"),
             separator(),
             vbox(Elements{
                 typrBox,

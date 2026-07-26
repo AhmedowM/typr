@@ -12,68 +12,78 @@ namespace typr::ui {
 ftxui::Component MainScreen(const MainScreenCallbacks& callbacks) {
     using namespace ftxui;
 
-    auto onStart = callbacks.onStartPractice;
+    auto onStart  = callbacks.onStartPractice;
     auto onHistory = callbacks.onHistory;
-    auto onStats = callbacks.onStats;
-    auto onInfo = callbacks.onInfo;
+    auto onStats  = callbacks.onStats;
+    auto onInfo   = callbacks.onInfo;
+    auto onQuit   = callbacks.onQuit;
 
-    auto flatButton = ButtonOption();
-    flatButton.transform = [](const EntryState& s) {
+    auto startOpt = ButtonOption();
+    startOpt.transform = [](const EntryState& s) {
         auto element = text(s.label) | center;
         if (s.focused) element |= inverted;
         return element;
     };
-
     auto startButton = Button("  START PRACTICE  ", [onStart] {
         if (onStart) onStart();
-    }, flatButton);
+    }, startOpt);
     startButton |= size(WIDTH, EQUAL, 33) | size(HEIGHT, EQUAL, 3);
 
-    auto historyButton = Button("  History  ", [onHistory] {
+    auto navButtonOption = ButtonOption();
+    navButtonOption.transform = [](const EntryState& s) {
+        auto prefix = text(s.focused ? "> " : "  ");
+        auto label = text(s.label) | center | flex;
+        if (s.focused) label |= bgcolor(BG_CARD);
+        return hbox(Elements{prefix, label}) | center;
+    };
+
+    auto historyButton = Button("History", [onHistory] {
         if (onHistory) onHistory();
-    }, flatButton);
-    historyButton |= size(WIDTH, EQUAL, 15);
+    }, navButtonOption);
 
-    auto statsButton = Button("  Stats  ", [onStats] {
+    auto statsButton = Button("Stats", [onStats] {
         if (onStats) onStats();
-    }, flatButton);
-    statsButton |= size(WIDTH, EQUAL, 15);
+    }, navButtonOption);
 
-    auto infoButton = Button("  Info  ", [onInfo] {
+    auto infoButton = Button("Info", [onInfo] {
         if (onInfo) onInfo();
-    }, flatButton);
-    infoButton |= size(WIDTH, EQUAL, 15);
+    }, navButtonOption);
 
-    auto buttonsRow = Container::Horizontal({
+    auto quitButton = Button("Exit", [onQuit] {
+        if (onQuit) onQuit();
+    }, navButtonOption);
+
+    auto navButtons = Container::Vertical({
         historyButton,
         statsButton,
         infoButton,
+        quitButton,
     });
 
     auto container = Container::Vertical({
         startButton,
-        buttonsRow,
+        navButtons,
     });
 
-    auto renderer = Renderer(container, std::function<Element()>([startButton, historyButton, statsButton] {
+    auto renderer = Renderer(container, std::function<Element()>([startButton, navButtons] {
         auto body = vbox(Elements{
             filler(),
             BigText::render("TYPR", Color::Cyan1, true),
             text("version " TYPR_VERSION) | dim | italic | center,
             filler(),
-            startButton->Render() | borderRounded | center,
+            startButton->Render() | borderRounded | color(Color::Green) | center,
             filler(),
-            hbox(Elements{historyButton->Render(), statsButton->Render()}) | center,
+            navButtons->Render() | center,
             filler(),
         }) | center;
 
         return vbox(Elements{
             body | flex,
-            footer({"Q: Quit", "I: Info", "↑↓: Navigate", "Enter: Select"}),
+            footer({"Q: Quit", "↑↓: Navigate", "Enter: Select"}),
         });
     }));
 
-    auto catchHandler = std::function<bool(Event)>([onInfo, onQuit = callbacks.onQuit](Event event) {
+    auto catchHandler = std::function<bool(Event)>([onInfo, onQuit](Event event) {
         if (event == Event::Character('q') || event == Event::Escape) {
             if (onQuit) onQuit();
             return true;
