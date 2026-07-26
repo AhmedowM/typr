@@ -23,14 +23,21 @@ jobs:
       - name: Build
         run: cmake --build build --config ${{ matrix.config }}
 
+      - name: Prepare binary
+        shell: bash
+        run: |
+          case "${{ runner.os }}" in
+            Linux)   cp build/typr                   typr-linux   ;;
+            macOS)   cp build/typr                   typr-macos   ;;
+            Windows) cp build/Release/typr.exe        typr-windows.exe \
+                  || cp build/typr.exe                typr-windows.exe ;;
+          esac
+
       - name: Upload binary
         uses: actions/upload-artifact@v4
         with:
-          name: typr-${{ github.ref_name }}-${{ matrix.os }}
-          path: |
-            build/typr
-            build/typr.exe
-            build/Release/typr.exe
+          name: typr-${{ github.ref_name }}-${{ runner.os }}
+          path: typr-*
           if-no-files-found: warn
 
   release:
@@ -48,6 +55,4 @@ jobs:
       - uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
-          files: |
-            typr
-            typr.exe
+          files: typr-*
