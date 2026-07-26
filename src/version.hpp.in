@@ -1,0 +1,3 @@
+#pragma once
+
+#define TYPR_VERSION "@TYPR_VERSION@"

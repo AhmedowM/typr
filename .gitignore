@@ -1,0 +1,14 @@
+build/
+.vscode/
+.cache/
+*.exe
+*.dll
+*.lib
+*.pdb
+*.ilk
+*.exp
+*.obj
+*.o
+*.a
+.DS_Store
+Thumbs.db
