@@ -28,15 +28,22 @@ ftxui::Component InfoScreen(InfoScreenCallbacks callbacks) {
             BigText::render("typr", ColorStatValue, true),
             vbox(Elements{
                 text(versionStr) | center | bold,
-                text("A C++23 TUI typing trainer") | dim | center | flex,
             })
         );
+        
+        auto typrInfoBox = vbox(
+            Elements{
+                text("A C++23 TUI typing trainer") | dim | center | flex,
+            }
+        ) | borderRounded;
 
         auto cpptyprBox = box(
             BigText::render("cpptypr"),
             vbox(Elements{
                 text("v" + std::string(cpptypr::Version()())) | center | bold,
+                filler(),
                 text("C++ wrapper for ctypr engine") | dim | center | flex,
+                filler()
             })
         );
 
@@ -44,20 +51,24 @@ ftxui::Component InfoScreen(InfoScreenCallbacks callbacks) {
             BigText::render("ctypr"),
             vbox(Elements{
                 text("v" + std::string(ctypr::Version()())) | center | bold,
+                filler(),
                 text("C typing engine with SQLite") | dim | center | flex,
+                filler()
             })
         );
 
         return vbox(Elements{
-            BigText::render("about"),
-            separator(),
-            vbox(Elements{
-                typrBox,
-                cpptyprBox,
-                ctyprBox,
-            }) | flex,
+            contain(vbox(Elements{
+                BigText::render("about"),
+                separator(),
+                gridbox({
+                    { typrBox, typrInfoBox },
+                    { separator(), separator() },
+                    { cpptyprBox, ctyprBox },
+                }) | size(HEIGHT, LESS_THAN, 20) | flex,
+            }) | flex),
             footer({"Esc: Menu"}),
-        }) | center;
+        });
     }));
 
     return renderer | CatchEvent(std::function<bool(Event)>([onMain = callbacks.onMain](Event event) {

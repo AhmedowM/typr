@@ -20,21 +20,29 @@ ftxui::Component MainScreen(const MainScreenCallbacks& callbacks) {
 
     auto startOpt = ButtonOption();
     startOpt.transform = [](const EntryState& s) {
+        auto prefix = text(s.focused ? "> " : "  ");
         auto element = text(s.label) | center;
-        if (s.focused) element |= inverted;
-        return element;
+        // if (s.focused) element |= inverted;
+        if (s.focused) {
+            prefix |= bgcolor(BG_CARD);
+            element |= bgcolor(BG_CARD);
+        }
+        return hbox(Elements{prefix, element | flex}) | flex;
     };
     auto startButton = Button("  START PRACTICE  ", [onStart] {
         if (onStart) onStart();
     }, startOpt);
-    startButton |= size(WIDTH, EQUAL, 33) | size(HEIGHT, EQUAL, 3);
+    startButton |= size(WIDTH, EQUAL, 33) | size(HEIGHT, EQUAL, 1);
 
     auto navButtonOption = ButtonOption();
     navButtonOption.transform = [](const EntryState& s) {
         auto prefix = text(s.focused ? "> " : "  ");
         auto label = text(s.label) | center | flex;
-        if (s.focused) label |= bgcolor(BG_CARD);
-        return hbox(Elements{prefix, label}) | center;
+        if (s.focused) {
+            prefix |= bgcolor(BG_CARD);
+            label |= bgcolor(BG_CARD);
+        }
+        return hbox(Elements{prefix, label}) | flex;
     };
 
     auto historyButton = Button("History", [onHistory] {
@@ -65,20 +73,23 @@ ftxui::Component MainScreen(const MainScreenCallbacks& callbacks) {
         navButtons,
     });
 
-    auto renderer = Renderer(container, std::function<Element()>([startButton, navButtons] {
-        auto body = vbox(Elements{
-            filler(),
-            BigText::render("TYPR", Color::Cyan1, true),
-            text("version " TYPR_VERSION) | dim | italic | center,
-            filler(),
-            startButton->Render() | borderRounded | color(Color::Green) | center,
-            filler(),
-            navButtons->Render() | center,
-            filler(),
-        }) | center;
-
+    auto renderer = Renderer(container, std::function<Element()>([startButton, historyButton, statsButton, infoButton, quitButton] {
         return vbox(Elements{
-            body | flex,
+            contain(vbox(Elements{
+                filler(),
+                BigText::render("TYPR", Color::Cyan1, true),
+                text("version " TYPR_VERSION) | dim | italic | center,
+                filler(),
+                startButton->Render() | borderRounded | color(Color::Green) | center,
+                filler(),
+                vbox(Elements{
+                    historyButton->Render() | color(Color::Cyan1),
+                    statsButton->Render() | color(Color::Cyan1),
+                    infoButton->Render() | color(Color::Cyan1),
+                    quitButton->Render() | color(Color::Cyan1),
+                }) | borderRounded | color(Color::Cyan1),
+                filler(),
+            })) | flex,
             footer({"Q: Quit", "↑↓: Navigate", "Enter: Select"}),
         });
     }));

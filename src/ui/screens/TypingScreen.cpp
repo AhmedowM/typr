@@ -85,9 +85,11 @@ ftxui::Component TypingScreen(EngineBridge& engine, std::shared_ptr<TypingScreen
         });
 
         return vbox(Elements{
-            settingsElem,
-            textArea | borderRounded | flex,
-            statsRow,
+            contain(vbox(Elements{
+                settingsElem,
+                textArea | borderRounded | flex,
+                statsRow,
+            }) | flex),
             footer({"Esc: Abort", "Ctrl+S: Mode", "Ctrl+T: Timeout", "Ctrl+G: Menu"}),
         });
     }));

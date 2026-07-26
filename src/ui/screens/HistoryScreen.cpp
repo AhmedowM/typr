@@ -52,11 +52,13 @@ ftxui::Component HistoryScreen(Storage& storage, HistoryScreenCallbacks callback
     auto renderer = Renderer(std::function<Element(bool)>([state, &fmtTime, &fmtDate, &pad](bool) {
         if (state->sessions.empty()) {
             return vbox(Elements{
-                BigText::render("history"),
-                separator(),
-                text("  (no sessions yet)") | dim | center | flex,
+                contain(vbox(Elements{
+                    BigText::render("history"),
+                    separator(),
+                    text("  (no sessions yet)") | dim | center | flex,
+                }) | flex),
                 footer({"Esc: Menu"}),
-            }) | center;
+            });
         }
 
         Elements rows;
@@ -85,11 +87,13 @@ ftxui::Component HistoryScreen(Storage& storage, HistoryScreenCallbacks callback
         }
 
         return vbox(Elements{
-            BigText::render("history"),
-            separator(),
-            vbox(std::move(rows)) | borderRounded | flex,
+            contain(vbox(Elements{
+                BigText::render("history"),
+                separator(),
+                vbox(std::move(rows)) | borderRounded | flex,
+            }) | flex),
             footer({"Up/Down: Navigate", "Delete: Remove", "Esc: Menu"}),
-        }) | center;
+        });
     }));
 
     return renderer | CatchEvent(std::function<bool(Event)>([state, &reload, &storage, onMain = callbacks.onMain](Event event) {

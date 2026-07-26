@@ -35,16 +35,18 @@ ftxui::Component StatsScreen(Storage& storage, StatsScreenCallbacks callbacks) {
         }) | borderRounded | flex;
 
         return vbox(Elements{
-            BigText::render("statistics", ColorStatValue, true),
-            separator(),
-            hbox(Elements{
-                StatBoxElement("Total Sessions", totalStr) | flex,
-                StatBoxElement("Avg WPM", avgStr) | flex,
-                StatBoxElement("Best WPM", bestStr) | flex,
-            }),
-            graphPlaceholder,
+            contain(vbox(Elements{
+                BigText::render("statistics", ColorStatValue, true),
+                separator(),
+                hbox(Elements{
+                    StatBoxElement("Total Sessions", totalStr) | flex,
+                    StatBoxElement("Avg WPM", avgStr) | flex,
+                    StatBoxElement("Best WPM", bestStr) | flex,
+                }),
+                graphPlaceholder,
+            }) | flex),
             footer({"Esc: Menu"}),
-        }) | center;
+        });
     }));
 
     return renderer | CatchEvent(std::function<bool(Event)>([onMain = callbacks.onMain](Event event) {

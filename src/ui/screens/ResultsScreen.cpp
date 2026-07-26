@@ -54,20 +54,16 @@ ftxui::Component ResultsScreen(EngineBridge& engine, Storage& storage, ResultsSc
             ? std::to_string(elapsedMin) + "m" + std::to_string(elapsedSec) + "s"
             : std::to_string(elapsedSec) + "s";
 
-        leftCol.push_back(
-            hbox(Elements{
-                StatBoxElement("WPM", std::to_string(static_cast<int>(stats.wpm))) | flex,
-                StatBoxElement("ACCURACY", std::to_string(static_cast<int>(stats.accuracy)) + "%") | flex,
-            })
-        );
-        leftCol.push_back(
-            hbox(Elements{
-                StatBoxElement("TIME", timeStr) | flex,
-                StatBoxElement("RAW WPM", std::to_string(static_cast<int>(stats.wpmRaw))) | flex,
-            })
-        );
+        auto statsGrid = gridbox({
+            { StatBoxElement("WPM", std::to_string(static_cast<int>(stats.wpm))), 
+            StatBoxElement("ACCURACY", std::to_string(static_cast<int>(stats.accuracy)) + "%") },
+            { StatBoxElement("TIME", timeStr), 
+            StatBoxElement("RAW WPM", std::to_string(static_cast<int>(stats.wpmRaw))) },
+        });
 
-        auto leftPanel = vbox(std::move(leftCol));
+        leftCol.push_back(statsGrid | yflex);
+
+        auto leftPanel = vbox(std::move(leftCol)) | size(WIDTH, EQUAL, 50);
 
         auto recent = storagePtr->repo().getRecent(5);
         Elements historyItems;
@@ -93,14 +89,16 @@ ftxui::Component ResultsScreen(EngineBridge& engine, Storage& storage, ResultsSc
         }) | borderRounded;
 
         return vbox(Elements{
-            headerElem,
-            separator(),
-            hbox(Elements{
-                leftPanel | flex_grow_factor(2),
-                rightPanel | flex_grow_factor(1),
-            }) | flex_grow_factor(3),
+            contain(vbox(Elements{
+                headerElem,
+                separator(),
+                hbox(Elements{
+                    leftPanel | flex_grow_factor(2),
+                    rightPanel | flex_grow_factor(1),
+                }) | size(HEIGHT, LESS_THAN, 10) | flex,
+                }) | flex),
             footer({"Ctrl+R: Restart", "Ctrl+N: Next", "Esc: Menu"}),
-        }) | center;
+        });
     }));
 
     return renderer | CatchEvent(std::function<bool(Event)>([onRestart, onNext, onMain](Event event) {

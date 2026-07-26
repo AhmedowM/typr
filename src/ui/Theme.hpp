@@ -27,6 +27,12 @@ inline const ftxui::Color ColorBorder       = BORDER_MED;
 inline const ftxui::Color ColorCardBackground = BG_CARD;
 inline const ftxui::Color ColorStatValue    = STAT_GREEN;
 
+constexpr int MAX_CONTENT_WIDTH = 100;
+
+inline ftxui::Element contain(ftxui::Element e) {
+    return e | ftxui::size(ftxui::WIDTH, ftxui::LESS_THAN, MAX_CONTENT_WIDTH) | ftxui::center | ftxui::flex;
+}
+
 ftxui::Element header();
 ftxui::Element footer(const std::vector<std::string>& hints = {});
 
