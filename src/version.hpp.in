@@ -1,3 +1,5 @@
 #pragma once
 
 #define TYPR_VERSION "@TYPR_VERSION@"
+#define FTXUI_VERSION "@FTXUI_VERSION@"
+#define SQLITE_VERSION "@SQLITE_VERSION@"

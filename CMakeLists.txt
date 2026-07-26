@@ -25,6 +25,11 @@ if(NOT TYPR_VERSION)
 endif()
 message(STATUS "typr version: ${TYPR_VERSION}")
 
+set(FTXUI_VERSION "v7.0.1")
+set(SQLITE_VERSION "v3.53.3")
+message(STATUS "ftxui version: ${FTXUI_VERSION}")
+message(STATUS "sqlite3 version: ${SQLITE_VERSION}")
+
 configure_file(
     ${CMAKE_SOURCE_DIR}/src/version.hpp.in
     ${CMAKE_BINARY_DIR}/generated/version.hpp

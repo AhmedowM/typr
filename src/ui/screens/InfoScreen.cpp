@@ -14,58 +14,58 @@ ftxui::Component InfoScreen(InfoScreenCallbacks callbacks) {
     using namespace ftxui;
 
     auto renderer = Renderer(std::function<Element(bool)>([onMain = callbacks.onMain](bool) {
-        auto versionStr = TYPR_VERSION;
+        auto typrVer = TYPR_VERSION;
+        auto cpptyprVer = std::string(cpptypr::Version()());
+        auto ctyprVer = std::string(ctypr::Version()());
+        auto ftxuiVer = FTXUI_VERSION;
+        auto sqliteVer = SQLITE_VERSION;
 
-        auto box = [](Element header, Element body) {
-            return vbox(Elements{
-                header,
+        auto typrBox = vbox(Elements{
+            BigText::render("typr", ACCENT_CYAN, true),
+            separator(),
+            text(typrVer) | center | bold,
+            text("Terminal typing trainer with real-time WPM, accuracy tracking & session history") | center | dim,
+        }) | borderRounded;
+
+        auto basedOn = hbox(Elements{
+            separator() | flex,
+            text(" based on ") | color(ACCENT_CYAN) | center,
+            separator() | flex,
+        });
+
+        auto cpptyprBox = vbox(Elements{
+            BigText::render("cpptypr", Color::Default, true),
+            separator(),
+            text("v" + cpptyprVer) | center | bold,
+            text("C++ wrapper around ctypr for building typing-test TUI components") | center | dim,
+        }) | borderRounded;
+
+        auto libEntry = [](std::string name, std::string ver, std::string desc) {
+            return hbox(Elements{
+                text("  " + name) | bold | size(WIDTH, EQUAL, 10),
                 separator(),
-                body | flex,
-            }) | borderRounded | flex;
+                text("  " + ver) | size(WIDTH, EQUAL, 10),
+                separator(),
+                text("  " + desc) | dim | flex,
+            });
         };
 
-        auto typrBox = box(
-            BigText::render("typr", ColorStatValue, true),
-            vbox(Elements{
-                text(versionStr) | center | bold,
-            })
-        );
-        
-        auto typrInfoBox = vbox(
-            Elements{
-                text("A C++23 TUI typing trainer") | dim | center | flex,
-            }
-        ) | borderRounded;
-
-        auto cpptyprBox = box(
-            BigText::render("cpptypr"),
-            vbox(Elements{
-                text("v" + std::string(cpptypr::Version()())) | center | bold,
-                filler(),
-                text("C++ wrapper for ctypr engine") | dim | center | flex,
-                filler()
-            })
-        );
-
-        auto ctyprBox = box(
-            BigText::render("ctypr"),
-            vbox(Elements{
-                text("v" + std::string(ctypr::Version()())) | center | bold,
-                filler(),
-                text("C typing engine with SQLite") | dim | center | flex,
-                filler()
-            })
-        );
+        auto libraryBox = vbox(Elements{
+            libEntry("ctypr", "v" + ctyprVer, "C typing engine with per-character accuracy & SQLite-backed persistence"),
+            separator(),
+            libEntry("ftxui", ftxuiVer, "C++ Terminal UI framework powering the component system"),
+            separator(),
+            libEntry("SQLite", sqliteVer, "Self-contained SQL database engine for persistent session storage"),
+        }) | borderRounded;
 
         return vbox(Elements{
             contain(vbox(Elements{
-                BigText::render("about"),
+                BigText::render("about", Color(ACCENT_CYAN)),
                 separator(),
-                gridbox({
-                    { typrBox, typrInfoBox },
-                    { separator(), separator() },
-                    { cpptyprBox, ctyprBox },
-                }) | size(HEIGHT, LESS_THAN, 20) | flex,
+                typrBox,
+                basedOn,
+                cpptyprBox,
+                libraryBox | size(HEIGHT, LESS_THAN, 7),
             }) | flex),
             footer({"Esc: Menu"}),
         });

@@ -60,7 +60,7 @@ ftxui::Component HistoryScreen(Storage& storage, HistoryScreenCallbacks callback
         if (state->sessions.empty()) {
             return vbox(Elements{
                 contain(vbox(Elements{
-                    BigText::render("history"),
+                    BigText::render("history", Color(ACCENT_CYAN)),
                     separator(),
                     text("  (no sessions yet)") | dim | center | flex,
                 }) | flex),
@@ -68,7 +68,7 @@ ftxui::Component HistoryScreen(Storage& storage, HistoryScreenCallbacks callback
             });
         }
 
-        const int VISIBLE = 20;
+        const int VISIBLE = 15;
         int n = static_cast<int>(state->sessions.size());
         int sel = state->selectedIndex;
 
@@ -83,7 +83,7 @@ ftxui::Component HistoryScreen(Storage& storage, HistoryScreenCallbacks callback
         auto header = text(pad("ID", 4) + "  " + pad("Date", 11) + "  " +
                            pad("Mode", 8) + "  " + pad("WPM", 6) + "  " +
                            pad("Acc", 5) + "  " + "Time")
-                      | bold | color(Color::Cyan1);
+                      | bold | color(ACCENT_CYAN);
         rows.push_back(header);
         rows.push_back(separator());
 
@@ -110,11 +110,11 @@ ftxui::Component HistoryScreen(Storage& storage, HistoryScreenCallbacks callback
 
         return vbox(Elements{
             contain(vbox(Elements{
-                BigText::render("history"),
+                BigText::render("history", Color(ACCENT_CYAN)),
                 separator(),
                 vbox(std::move(rows)) | borderRounded | flex,
-            }) | size(HEIGHT, LESS_THAN, 28) | flex),
-            footer({"↑↓: Navigate", "Delete: Remove", "Esc: Menu"}),
+            }) | size(HEIGHT, LESS_THAN, 23) | flex),
+            footer({"↑↓: Navigate", "Del: Delete entry", "Esc: Menu"}),
         });
     }));
 

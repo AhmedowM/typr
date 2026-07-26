@@ -36,7 +36,7 @@ ftxui::Component StatsScreen(Storage& storage, StatsScreenCallbacks callbacks) {
 
         return vbox(Elements{
             contain(vbox(Elements{
-                BigText::render("statistics", ColorStatValue, true),
+                BigText::render("statistics", ACCENT_CYAN, true),
                 separator(),
                 hbox(Elements{
                     StatBoxElement("Total Sessions", totalStr) | flex,

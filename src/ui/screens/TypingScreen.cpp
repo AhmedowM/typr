@@ -34,9 +34,9 @@ ftxui::Component TypingScreen(EngineBridge& engine, std::shared_ptr<TypingScreen
                 Element ch = text(std::string(1, textView[i]));
                 if (i < cursor) {
                     if (snap.isIncorrect(i))
-                        ch |= color(Color::Red) | bold;
+                        ch |= color(ERROR_RED) | bold;
                     else
-                        ch |= color(Color::Green);
+                        ch |= color(SUCCESS_GREEN);
                 } else if (i == cursor) {
                     ch |= bold | bgcolor(Color::White) | color(Color::Black);
                 } else {
@@ -52,7 +52,7 @@ ftxui::Component TypingScreen(EngineBridge& engine, std::shared_ptr<TypingScreen
                 auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
                     now - state->errorFlashStart).count();
                 if (elapsed < 100) {
-                    textArea |= bgcolor(Color::Red);
+                    textArea |= bgcolor(ERROR_RED);
                 } else {
                     state->errorFlashActive.store(false);
                 }
