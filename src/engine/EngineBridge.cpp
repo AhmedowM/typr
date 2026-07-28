@@ -54,7 +54,13 @@ cpptypr::Snapshot EngineBridge::getSnapshot() {
 }
 
 cpptypr::SessionStats EngineBridge::stats() {
-    return m_engine->stats();
+  return m_engine->stats();
+}
+
+void EngineBridge::setContentProvider(cpptypr::ContentProvider provider) {
+  m_provider = std::move(provider);
+  m_engine->setContentProvider(m_provider);
 }
 
 }
+

@@ -66,7 +66,8 @@ message(STATUS "Content databases ready in ${CONTENT_DB_DIR}")
 
 add_executable(typr
     src/main.cpp
-    src/app/AppController.cpp
+    src/app/ContentLocator.cpp
+src/app/AppController.cpp
     src/ui/Theme.cpp
     src/ui/Chrome.cpp
     src/ui/BigText.cpp
@@ -92,6 +93,10 @@ target_link_libraries(typr PRIVATE
   ftxui::component
   cpptypr
 )
+
+if(WIN32)
+  target_link_libraries(typr PRIVATE urlmon)
+endif()
 
 target_compile_definitions(typr PRIVATE
   TYPR_CONTENT_VERSION="${CONTENT_DB_VERSION}"

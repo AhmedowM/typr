@@ -31,6 +31,10 @@ struct Paths {
         return dir / "sessions.db";
     }
 
+    static std::filesystem::path contentDbDir() {
+        return userDataDir() / "content";
+    }
+
     static void ensureDataDir() {
         std::filesystem::create_directories(userDataDir());
     }

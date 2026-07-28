@@ -17,4 +17,47 @@ cpptypr::ContentProvider ContentSource::makeProvider() {
     );
 }
 
+cpptypr::ContentProvider ContentSource::makeProvider(
+    ContentType type,
+    const std::filesystem::path& sentencesDb,
+    const std::filesystem::path& wordsDb,
+    const std::filesystem::path& filePath)
+{
+    using cpptypr::ContentMode;
+
+    switch (type) {
+    case ContentType::Sentences: {
+        auto cp = cpptypr::ContentProvider::fromDatabase(sentencesDb.string());
+        cp.setMode(ContentMode::Sentences);
+        return cp;
+    }
+    case ContentType::CommonWords: {
+        auto cp = cpptypr::ContentProvider::fromDatabase(wordsDb.string());
+        cp.setMode(ContentMode::CommonWords);
+        cp.setWordLengthRange(3, 8);
+        return cp;
+    }
+    case ContentType::RandomWords: {
+        auto cp = cpptypr::ContentProvider::fromDatabase(wordsDb.string());
+        cp.setMode(ContentMode::RandomWords);
+        cp.setWordLengthRange(3, 12);
+        return cp;
+    }
+    case ContentType::File:
+        return cpptypr::ContentProvider::fromFile(filePath.string());
+    }
+
+    return cpptypr::ContentProvider::fromString("");
+}
+
+std::string_view ContentSource::label(ContentType type) {
+    switch (type) {
+    case ContentType::Sentences:    return "Sentences";
+    case ContentType::CommonWords:  return "Common Words";
+    case ContentType::RandomWords:  return "Random Words";
+    case ContentType::File:         return "File";
+    }
+    return "";
+}
+
 }

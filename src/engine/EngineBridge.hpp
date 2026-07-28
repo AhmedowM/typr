@@ -26,6 +26,8 @@ public:
     cpptypr::Snapshot getSnapshot();
     cpptypr::SessionStats stats();
 
+    void setContentProvider(cpptypr::ContentProvider provider);
+
     cpptypr::Engine& engine() { return *m_engine; }
     const cpptypr::Engine& engine() const { return *m_engine; }
 
