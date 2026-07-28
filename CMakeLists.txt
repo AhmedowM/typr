@@ -34,7 +34,35 @@ configure_file(
     ${CMAKE_SOURCE_DIR}/src/version.hpp.in
     ${CMAKE_BINARY_DIR}/generated/version.hpp
     @ONLY
-)
+  )
+
+set(CONTENT_DB_VERSION "v1.5.2")
+set(CONTENT_DB_BASE_URL "https://github.com/AhmedowM/ctypr/releases/download/${CONTENT_DB_VERSION}")
+set(CONTENT_DB_DIR ${CMAKE_BINARY_DIR}/content)
+
+file(MAKE_DIRECTORY ${CONTENT_DB_DIR})
+
+if(NOT EXISTS ${CONTENT_DB_DIR}/sentences.db)
+  message(STATUS "Downloading sentences.db (1.7 MB)...")
+  file(DOWNLOAD ${CONTENT_DB_BASE_URL}/sentences.db ${CONTENT_DB_DIR}/sentences.db
+        SHOW_PROGRESS STATUS sdb_status)
+  list(GET sdb_status 0 sdb_code)
+  if(NOT sdb_code EQUAL 0)
+    message(FATAL_ERROR "Failed to download sentences.db: ${sdb_status}")
+  endif()
+endif()
+
+if(NOT EXISTS ${CONTENT_DB_DIR}/words.db)
+  message(STATUS "Downloading words.db (5.7 MB)...")
+  file(DOWNLOAD ${CONTENT_DB_BASE_URL}/words.db ${CONTENT_DB_DIR}/words.db
+        SHOW_PROGRESS STATUS wdb_status)
+  list(GET wdb_status 0 wdb_code)
+  if(NOT wdb_code EQUAL 0)
+    message(FATAL_ERROR "Failed to download words.db: ${wdb_status}")
+  endif()
+endif()
+
+message(STATUS "Content databases ready in ${CONTENT_DB_DIR}")
 
 add_executable(typr
     src/main.cpp
@@ -61,6 +89,17 @@ target_include_directories(typr PRIVATE
 )
 
 target_link_libraries(typr PRIVATE
-    ftxui::component
-    cpptypr
+  ftxui::component
+  cpptypr
+)
+
+target_compile_definitions(typr PRIVATE
+  TYPR_CONTENT_VERSION="${CONTENT_DB_VERSION}"
+)
+
+install(TARGETS typr RUNTIME DESTINATION bin)
+install(FILES
+  ${CONTENT_DB_DIR}/sentences.db
+  ${CONTENT_DB_DIR}/words.db
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/typr/content
 )
