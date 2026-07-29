@@ -72,7 +72,8 @@ src/app/AppController.cpp
     src/ui/Chrome.cpp
     src/ui/BigText.cpp
     src/ui/components/StatBox.cpp
-    src/ui/components/SettingsBar.cpp
+    src/ui/components/ContentSelector.cpp
+src/ui/components/SettingsBar.cpp
     src/ui/screens/MainScreen.cpp
     src/ui/screens/TypingScreen.cpp
     src/ui/screens/ResultsScreen.cpp
