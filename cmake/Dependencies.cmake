@@ -10,7 +10,7 @@ FetchContent_Declare(
 FetchContent_Declare(
     cpptypr
     GIT_REPOSITORY https://github.com/AhmedowM/cpptypr.git
-    GIT_TAG        v0.4.2
+GIT_TAG v0.5.1
 )
 
 FetchContent_MakeAvailable(FTXUI)

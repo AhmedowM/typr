@@ -3,6 +3,7 @@
 #include <ftxui/component/component.hpp>
 #include <ftxui/dom/elements.hpp>
 #include <atomic>
+#include <cstdint>
 #include <chrono>
 #include <memory>
 #include <string>
@@ -15,7 +16,7 @@ namespace typr::ui {
 
 struct TypingScreenState {
     std::atomic<bool> errorFlashActive{false};
-    std::chrono::steady_clock::time_point errorFlashStart;
+    std::atomic<int64_t> errorFlashStartMs{0};
     bool showIdleHint = true;
     std::string modeLabel = "STRICT";
     std::string timeoutLabel = "30s";

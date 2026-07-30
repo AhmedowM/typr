@@ -9,7 +9,8 @@
 
 namespace typr::ui {
 
-ftxui::Component MainScreen(const MainScreenCallbacks& callbacks) {
+ftxui::Component MainScreen(const MainScreenCallbacks& callbacks,
+                            std::shared_ptr<ContentSelectorState> contentState) {
     using namespace ftxui;
 
     auto onStart  = callbacks.onStartPractice;
@@ -17,6 +18,12 @@ ftxui::Component MainScreen(const MainScreenCallbacks& callbacks) {
     auto onStats  = callbacks.onStats;
     auto onInfo   = callbacks.onInfo;
     auto onQuit   = callbacks.onQuit;
+
+    ContentSelectorCallbacks csCB;
+    csCB.onAddFile = [onStart] {
+        // Placeholder: file-open dialog will be added later
+    };
+    auto selector = ContentSelector(contentState, csCB);
 
     auto startOpt = ButtonOption();
     startOpt.transform = [](const EntryState& s) {
@@ -69,10 +76,11 @@ ftxui::Component MainScreen(const MainScreenCallbacks& callbacks) {
 
     auto container = Container::Vertical({
         startButton,
+        selector,
         navButtons,
     });
 
-    auto renderer = Renderer(container, std::function<Element()>([startButton, historyButton, statsButton, infoButton, quitButton] {
+    auto renderer = Renderer(container, std::function<Element()>([selector, startButton, historyButton, statsButton, infoButton, quitButton] {
         return vbox(Elements{
             contain(vbox(Elements{
                 filler(),
@@ -80,7 +88,9 @@ ftxui::Component MainScreen(const MainScreenCallbacks& callbacks) {
                 text("version " TYPR_VERSION) | dim | italic | center,
                 filler(),
                 startButton->Render() | borderRounded | color(STAT_GREEN) | center,
-                filler(),
+                separator(),
+                selector->Render() | center,
+                separator(),
                 vbox(Elements{
                     historyButton->Render() | color(ACCENT_CYAN),
                     statsButton->Render() | color(ACCENT_CYAN),
@@ -88,8 +98,8 @@ ftxui::Component MainScreen(const MainScreenCallbacks& callbacks) {
                     quitButton->Render() | color(ACCENT_CYAN),
                 }) | borderRounded | color(ACCENT_CYAN),
                 filler(),
-            })) | flex,
-            footer({"Q: Quit", "↑↓: Navigate", "Enter: Select"}),
+            }) | flex),
+            footer({"Q: Quit", "↑↓: Navigate", "Enter: Select", "←→: Cycle Mode", "F: Add File"}),
         });
     }));
 

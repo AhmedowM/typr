@@ -36,7 +36,7 @@ configure_file(
     @ONLY
   )
 
-set(CONTENT_DB_VERSION "v1.5.2")
+file(STRINGS "${CMAKE_CURRENT_SOURCE_DIR}/content_version.txt" CONTENT_DB_VERSION)
 set(CONTENT_DB_BASE_URL "https://github.com/AhmedowM/ctypr/releases/download/${CONTENT_DB_VERSION}")
 set(CONTENT_DB_DIR ${CMAKE_BINARY_DIR}/content)
 
@@ -69,7 +69,7 @@ add_executable(typr
     src/app/ContentLocator.cpp
 src/app/AppController.cpp
     src/ui/Theme.cpp
-    src/ui/Chrome.cpp
+    src/ui/BigText.cpp
     src/ui/BigText.cpp
     src/ui/components/StatBox.cpp
     src/ui/components/ContentSelector.cpp

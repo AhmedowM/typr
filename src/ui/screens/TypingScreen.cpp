@@ -1,4 +1,5 @@
 #include "TypingScreen.hpp"
+#include "../Format.hpp"
 #include "../Theme.hpp"
 #include "../components/StatBox.hpp"
 #include "../components/SettingsBar.hpp"
@@ -47,14 +48,14 @@ ftxui::Component TypingScreen(EngineBridge& engine, std::shared_ptr<TypingScreen
 
             textArea = hflow(chars) | flex;
 
-            if (state->errorFlashActive.load()) {
-                auto now = std::chrono::steady_clock::now();
-                auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
-                    now - state->errorFlashStart).count();
-                if (elapsed < 100) {
+            if (state->errorFlashActive.load(std::memory_order_acquire)) {
+                auto nowMs = std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::steady_clock::now().time_since_epoch()).count();
+                auto startMs = state->errorFlashStartMs.load(std::memory_order_acquire);
+                if (nowMs - startMs < 100) {
                     textArea |= bgcolor(ERROR_RED);
                 } else {
-                    state->errorFlashActive.store(false);
+                    state->errorFlashActive.store(false, std::memory_order_release);
                 }
             }
         }
@@ -66,13 +67,7 @@ ftxui::Component TypingScreen(EngineBridge& engine, std::shared_ptr<TypingScreen
         auto settingsElem = SettingsBarElement(cfg);
 
         auto stats = snap.stats();
-        auto elapsedMs = stats.durationMs.count();
-        auto elapsedSec = elapsedMs / 1000;
-        auto elapsedMin = elapsedSec / 60;
-        elapsedSec %= 60;
-        std::string elapsedStr = elapsedMin > 0
-            ? std::to_string(elapsedMin) + "m" + std::to_string(elapsedSec) + "s"
-            : std::to_string(elapsedSec) + "s";
+        auto elapsedStr = formatDuration(stats.durationMs);
         std::string accuracyStr = std::to_string(static_cast<int>(stats.accuracy)) + "%";
         std::string speedStr = std::to_string(static_cast<int>(stats.wpm));
         std::string rawStr = std::to_string(static_cast<int>(stats.wpmRaw));

@@ -10,43 +10,41 @@ EngineBridge::EngineBridge(cpptypr::EngineMode mode, uint16_t timeout)
 {
     m_engine->setLogger(*m_logger);
 
-    m_handles.push_back(m_engine->onStarted([this] {
-        auto s = m_engine->stats();
-        (void)s;
-    }));
-
-    m_handles.push_back(m_engine->onFinished([this] {
-        auto s = m_engine->stats();
-        (void)s;
-    }));
-
-    m_handles.push_back(m_engine->onTimeout([this] {
-        auto s = m_engine->stats();
-        (void)s;
-    }));
-
-    m_handles.push_back(m_engine->onIncorrectKeystroke([this] {
-    }));
 }
 
 void EngineBridge::start() {
-    m_engine->start();
+    try {
+        m_engine->start();
+    } catch (const std::exception&) {
+    }
 }
 
 void EngineBridge::stop() {
-    m_engine->stop();
+    try {
+        m_engine->stop();
+    } catch (const std::exception&) {
+    }
 }
 
 void EngineBridge::reset() {
-    m_engine->reset();
+    try {
+        m_engine->reset();
+    } catch (const std::exception&) {
+    }
 }
 
 void EngineBridge::keyPress(char key) {
-    m_engine->keyPress(key);
+    try {
+        m_engine->keyPress(key);
+    } catch (const std::exception&) {
+    }
 }
 
 void EngineBridge::backspacePress() {
-    m_engine->backspacePress();
+    try {
+        m_engine->backspacePress();
+    } catch (const std::exception&) {
+    }
 }
 
 cpptypr::Snapshot EngineBridge::getSnapshot() {
@@ -54,12 +52,19 @@ cpptypr::Snapshot EngineBridge::getSnapshot() {
 }
 
 cpptypr::SessionStats EngineBridge::stats() {
-  return m_engine->stats();
+    try {
+        return m_engine->stats();
+    } catch (const std::exception&) {
+        return {};
+    }
 }
 
 void EngineBridge::setContentProvider(cpptypr::ContentProvider provider) {
-  m_provider = std::move(provider);
-  m_engine->setContentProvider(m_provider);
+    try {
+        m_provider = std::move(provider);
+        m_engine->setContentProvider(m_provider);
+    } catch (const std::exception&) {
+    }
 }
 
 }

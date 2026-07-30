@@ -1,7 +1,9 @@
 #pragma once
 
+#include "../components/ContentSelector.hpp"
 #include <ftxui/component/component.hpp>
 #include <functional>
+#include <memory>
 
 namespace typr::ui {
 
@@ -21,6 +23,7 @@ struct MainScreenCallbacks {
     std::function<void()> onQuit;
 };
 
-ftxui::Component MainScreen(const MainScreenCallbacks& callbacks);
+ftxui::Component MainScreen(const MainScreenCallbacks& callbacks,
+                            std::shared_ptr<ContentSelectorState> contentState);
 
 }

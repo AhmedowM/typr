@@ -2,7 +2,6 @@
 
 #include <cpptypr.hpp>
 #include <memory>
-#include <vector>
 
 namespace typr {
 
@@ -35,7 +34,6 @@ private:
     std::unique_ptr<cpptypr::Logger> m_logger;
     cpptypr::ContentProvider m_provider;
     std::unique_ptr<cpptypr::Engine> m_engine;
-    std::vector<cpptypr::CallbackHandle> m_handles;
 };
 
 }

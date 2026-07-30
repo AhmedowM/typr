@@ -1,4 +1,5 @@
 #include "HistoryScreen.hpp"
+#include "../Format.hpp"
 #include "../Theme.hpp"
 #include "../BigText.hpp"
 #include "../../storage/Storage.hpp"
@@ -29,14 +30,6 @@ ftxui::Component HistoryScreen(Storage& storage, HistoryScreenCallbacks callback
         }
     };
 
-    auto fmtTime = [](std::chrono::milliseconds ms) -> std::string {
-        auto sec = ms.count() / 1000;
-        auto min = sec / 60;
-        sec %= 60;
-        if (min > 0) return std::to_string(min) + "m" + std::to_string(sec) + "s";
-        return std::to_string(sec) + "s";
-    };
-
     auto fmtDate = [](const std::string& iso) -> std::string {
         if (iso.size() < 16) return iso;
         return iso.substr(5, 5) + " " + iso.substr(11, 5);
@@ -51,8 +44,7 @@ ftxui::Component HistoryScreen(Storage& storage, HistoryScreenCallbacks callback
     state->sessions = storage.repo().getRecent(50);
     clampSelected();
 
-    auto renderer = Renderer(std::function<Element(bool)>([state, fmtTime = std::move(fmtTime), fmtDate = std::move(fmtDate), pad = std::move(pad), &storage](bool) {
-        state->sessions = storage.repo().getRecent(50);
+    auto renderer = Renderer(std::function<Element(bool)>([state, fmtDate = std::move(fmtDate), pad = std::move(pad), &storage](bool) {
         if (state->selectedIndex >= static_cast<int>(state->sessions.size())) {
             state->selectedIndex = state->sessions.empty() ? -1 : static_cast<int>(state->sessions.size()) - 1;
         }
@@ -97,7 +89,7 @@ ftxui::Component HistoryScreen(Storage& storage, HistoryScreenCallbacks callback
                 pad(s.mode, 8) + "  " +
                 pad(std::to_string(static_cast<int>(s.wpm)), 6) + "  " +
                 pad(std::to_string(static_cast<int>(s.accuracy)) + "%", 5) + "  " +
-                fmtTime(s.durationMs);
+                formatDuration(s.durationMs);
 
             auto elem = text(line) | (selRow ? bgcolor(BG_CARD) : bgcolor(Color::Default));
             rows.push_back(elem);

@@ -1,13 +1,15 @@
 #pragma once
 
-#include "engine/EngineBridge.hpp"
-#include "ui/screens/MainScreen.hpp"
-#include "ui/screens/TypingScreen.hpp"
+#include "ContentLocator.hpp"
+#include "../engine/EngineBridge.hpp"
+#include "../ui/components/ContentSelector.hpp"
+#include "../ui/screens/MainScreen.hpp"
+#include "../ui/screens/TypingScreen.hpp"
 #include <ftxui/component/component.hpp>
 #include <ftxui/component/screen_interactive.hpp>
+#include <atomic>
 #include <memory>
 #include <thread>
-#include <atomic>
 #include <vector>
 
 namespace typr {
@@ -36,6 +38,8 @@ public:
 private:
     void navigateTo(ScreenType screen);
     void tickLoop();
+    void startDownloadIfNeeded(const ContentPaths& paths);
+    void applyProviderSelection();
 
     ftxui::ScreenInteractive& m_screen;
     EngineBridge m_engine;
@@ -52,11 +56,17 @@ private:
     ftxui::Component m_infoScreen;
 
     std::shared_ptr<ui::TypingScreenState> m_typingState;
+    std::shared_ptr<ui::ContentSelectorState> m_contentState;
+
+    ContentPaths m_contentPaths;
 
     std::vector<cpptypr::CallbackHandle> m_engineHandles;
 
     std::thread m_tickThread;
     std::atomic<bool> m_tickRunning{true};
+
+    std::thread m_downloadThread;
+    std::atomic<bool> m_downloadRunning{false};
 
     std::atomic<ScreenType> m_pendingNav{ScreenType::Main};
 };
